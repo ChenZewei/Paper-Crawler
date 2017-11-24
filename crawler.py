@@ -67,11 +67,11 @@ def ieee_query_conference_url(title, yearRange = "2014_2017", isNewSearch = Fals
         query_url += "&newsearch=true"
     return query_url
 
-my_print(ieee_query_url("real-time systems"))
+# my_print(ieee_query_url("real-time systems"))
 
-my_print(ieee_query_by_author_url("xue", "liu"))
+# my_print(ieee_query_by_author_url("xue", "liu"))
 
-my_print(ieee_query_conference_url("real-time systems"))
+# my_print(ieee_query_conference_url("real-time systems"))
 
 def downloader_test(proxy=None, proxy_type="http", quiet=False, browser="phantomjs"):
     phantomjs_args = []
