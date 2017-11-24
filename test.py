@@ -32,17 +32,30 @@ def ieee_query_url(queryText, yearRange = "2014_2017", isNewSearch = False):
     return query_url
 
 def paper_url_from_webpage(driver):
-    #time.sleep(10)
-    paper_elements = driver.find_elements_by_class_name("icon-pdf")
-    paper_urls = list()
-
+    paper_elements = driver.find_elements_by_class_name("List-results-items")
+    paper_info = list()
+    size = len(paper_elements)
+    print("Size:{}".format(size))
+    count = 0
     for paper_element in paper_elements:
-        paper_url = paper_element.get_attribute("href")
-        paper_urls.append(paper_url)
-    return paper_urls
+        try:
+            count += 1
+            print("Element{}:".format(count))
+            year = paper_element.find_element_by_css_selector("div:nth-child(3) > div:nth-child(2) > span:nth-child(1)").text
+            print(year)
+            title = paper_element.find_element_by_css_selector("h2:nth-child(1) > a:nth-child(1)").text
+            print(title)
+            paper_url = paper_element.find_element_by_class_name("icon-pdf").get_attribute("href")
+            # print(paper_url)
+            paper_info.append([year, title, paper_url])
+        except Exception as e:
+            print("## Fail:  {}".format(e.args))
+    return paper_info
 
 def ieee_paper_downloader(paper_url, dst_dir, file_name, timeout = 20, proxy_type = None, proxy = None):
-    page = webdriver.PhantomJS(executable_path="phantomjs", desired_capabilities=dcap)
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    page = webdriver.Chrome(chrome_options=chrome_options)
     page.get(paper_url)
     time.sleep(10)
     page.save_screenshot('page.png')
@@ -74,9 +87,9 @@ driver.set_page_load_timeout(50)    #设置超时时间
 driver.set_script_timeout(50)       #这两种设置都进行才有效
 print(222)
 # driver.set_window_size(1920, 1080)
-driver.get("http://ieeexplore.ieee.org/search/searchresult.jsp?reload=true&newsearch=true&queryText=real-time")
-# driver.get("file:///home/hadoop/works/Paper-Crawler/IEEE%20Xplore%20Search%20Results.html")
-time.sleep(5)
+driver.get("file:///home/hadoop/works/Paper-Crawler/IEEE%20Xplore%20Search%20Results.html")
+# driver.get("http://ieeexplore.ieee.org/search/searchresult.jsp?reload=true&newsearch=true&queryText=real-time")
+# time.sleep(5)
 
 while True:
     try:
@@ -100,21 +113,21 @@ driver.save_screenshot("screen_shot.png")
 print(333)
 # print(driver.page_source)
 # elements = driver.find_element_by_xpath("//*[@id=\"xplMainContent\"]/section[3]/div/div/div[1]/xpl-result/div/div[2]/h2/a")
-paper_urls = paper_url_from_webpage(driver)
+paper_info = paper_url_from_webpage(driver)
 print(444)
-for paper_url in paper_urls:
-    print(paper_url)
+for paper in paper_info:
+    print("{}-{}-{}".format(paper[0], paper[1], paper[2]))
 
 # ieee_paper_downloader("http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8116677", "download", "test.pdf")
 
-driver.get("http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8116677")
-time.sleep(5)
-iframe = driver.find_element_by_xpath("/html/body/iframe[2]")
-driver.switch_to_frame(iframe)
-src = iframe.get_attribute("src")
-print(src)
+# driver.get("http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8116677")
+# time.sleep(5)
+# iframe = driver.find_element_by_xpath("/html/body/iframe[2]")
+# driver.switch_to_frame(iframe)
+# src = iframe.get_attribute("src")
+# print(src)
 
-driver.close()
+# driver.close()
 
 
 
