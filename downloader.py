@@ -35,16 +35,10 @@ def paper_download(paper_url, dst_dir, file_name, timeout=20, proxy_type=None, p
             with open(file_path, 'wb') as f:
                 f.write(response.content)
             response.close()
-            file_type = imghdr.what(file_path)
-            # if file_type is not None:
-            if file_type in ["pdf"]:
-                new_file_name = "{}.{}".format(file_name, file_type)
-                new_file_path = os.path.join(dst_dir, new_file_name)
-                shutil.move(file_path, new_file_path)
-                print("## OK:  {}  {}".format(new_file_name, paper_url))
-            else:
-                os.remove(file_path)
-                print("## Err:  {}".format(paper_url))
+            new_file_name = "{}.pdf".format(file_name)
+            new_file_path = os.path.join(dst_dir, new_file_name)
+            shutil.move(file_path, new_file_path)
+            print("## OK:  {}  {}".format(new_file_name, paper_url))
             break
         except Exception as e:
             if try_times < 3:
@@ -55,7 +49,7 @@ def paper_download(paper_url, dst_dir, file_name, timeout=20, proxy_type=None, p
             break
 
 
-def papers_download(paper_urls, dst_dir, file_prefix, concurrency=50, timeout=20, proxy_type=None, proxy=None):
+def papers_download(paper_info, dst_dir, concurrency=50, timeout=20, proxy_type=None, proxy=None):
     """
     Download image according to given urls and automatically rename them in order.
     :param timeout:
@@ -73,9 +67,9 @@ def papers_download(paper_urls, dst_dir, file_prefix, concurrency=50, timeout=20
         count = 0
         if not os.path.exists(dst_dir):
             os.makedirs(dst_dir)
-        for paper_url in paper_urls:
+        for paper in paper_info:
             file_name = file_prefix + "_" + "%04d" % count
             future_list.append(executor.submit(
-                paper_download, paper_url, dst_dir, file_name, timeout, proxy_type, proxy))
+                paper_download, paper[2], dst_dir, "{}-{}".format(paper[0], paper[1]), timeout, proxy_type, proxy))
             count += 1
         concurrent.futures.wait(future_list, timeout=180)

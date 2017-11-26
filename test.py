@@ -9,6 +9,7 @@ import os
 import time
 import concurrent.futures
 import requests
+import downloader
 from urllib.parse import unquote, quote
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -41,7 +42,7 @@ def paper_url_from_webpage(driver):
         try:
             count += 1
             print("Element{}:".format(count))
-            year = paper_element.find_element_by_css_selector("div:nth-child(3) > div:nth-child(2) > span:nth-child(1)").text
+            year = paper_element.find_element_by_css_selector("div:nth-child(3) > div:nth-child(2) > span:nth-child(1)").text.split(': ')[1]
             print(year)
             title = paper_element.find_element_by_css_selector("h2:nth-child(1) > a:nth-child(1)").text
             print(title)
@@ -77,19 +78,17 @@ with open("output/test", 'wb') as f:
 
 response.close()
 
-print(111)
-
 chrome_options = Options()
 # specify headless mode
 chrome_options.add_argument("--headless")
 driver = webdriver.Chrome(chrome_options=chrome_options)
-driver.set_page_load_timeout(50)    #设置超时时间
-driver.set_script_timeout(50)       #这两种设置都进行才有效
-print(222)
+driver.set_page_load_timeout(60)    #设置超时时间
+driver.set_script_timeout(60)       #这两种设置都进行才有效
+
 # driver.set_window_size(1920, 1080)
-driver.get("file:///home/hadoop/works/Paper-Crawler/IEEE%20Xplore%20Search%20Results.html")
-# driver.get("http://ieeexplore.ieee.org/search/searchresult.jsp?reload=true&newsearch=true&queryText=real-time")
-# time.sleep(5)
+# driver.get("file:///home/hadoop/works/Paper-Crawler/IEEE%20Xplore%20Search%20Results.html")
+driver.get("http://ieeexplore.ieee.org/search/searchresult.jsp?reload=true&newsearch=true&queryText=real-time")
+time.sleep(5)
 
 while True:
     try:
@@ -105,29 +104,35 @@ while True:
         time.sleep(2)
 
 
-article = list()
-
-
-
 driver.save_screenshot("screen_shot.png")
-print(333)
 # print(driver.page_source)
 # elements = driver.find_element_by_xpath("//*[@id=\"xplMainContent\"]/section[3]/div/div/div[1]/xpl-result/div/div[2]/h2/a")
 paper_info = paper_url_from_webpage(driver)
-print(444)
+
+o_file = open("output/papers.csv","w")
 for paper in paper_info:
     print("{}-{}-{}".format(paper[0], paper[1], paper[2]))
+    o_file.write("{},{},{}\n".format(paper[0],paper[1],paper[2]))
+o_file.close()
+
 
 # ieee_paper_downloader("http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8116677", "download", "test.pdf")
+src = ""
+for paper in paper_info:
+    try:
+        paper_test = paper_info[0]
+        driver.get(paper[2])
+        time.sleep(5)
+        iframe = driver.find_element_by_xpath("/html/body/iframe[2]")
+        driver.switch_to_frame(iframe)
+        src = iframe.get_attribute("src")
+        print(src)
+        downloader.paper_download(src, "output", "{}--{}".format(paper[0],paper[1]))
+    except Exception as e:
+        print("## Err:  {}".format(e.args))
 
-# driver.get("http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8116677")
-# time.sleep(5)
-# iframe = driver.find_element_by_xpath("/html/body/iframe[2]")
-# driver.switch_to_frame(iframe)
-# src = iframe.get_attribute("src")
-# print(src)
 
-# driver.close()
+driver.close()
 
 
 

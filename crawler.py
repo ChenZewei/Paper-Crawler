@@ -73,6 +73,25 @@ def ieee_query_conference_url(title, yearRange = "2014_2017", isNewSearch = Fals
 
 # my_print(ieee_query_conference_url("real-time systems"))
 
+def paper_url_from_webpage(driver):
+    paper_elements = driver.find_elements_by_class_name("List-results-items")
+    paper_info = list()
+    count = 0
+    for paper_element in paper_elements:
+        try:
+            count += 1
+            # print("Element{}:".format(count))
+            year = paper_element.find_element_by_css_selector("div:nth-child(3) > div:nth-child(2) > span:nth-child(1)").text.split(': ')[1]
+            # print(year)
+            title = paper_element.find_element_by_css_selector("h2:nth-child(1) > a:nth-child(1)").text
+            # print(title)
+            paper_url = paper_element.find_element_by_class_name("icon-pdf").get_attribute("href")
+            # print(paper_url)
+            paper_info.append([year, title, paper_url])
+        except Exception as e:
+            print("## Fail:  {}".format(e.args))
+    return paper_info
+
 def downloader_test(proxy=None, proxy_type="http", quiet=False, browser="phantomjs"):
     phantomjs_args = []
     if proxy is not None and proxy_type is not None:
