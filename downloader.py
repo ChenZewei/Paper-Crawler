@@ -49,15 +49,14 @@ def paper_download(paper_url, dst_dir, file_name, timeout=20, proxy_type=None, p
             break
 
 
-def papers_download(paper_info, dst_dir, concurrency=50, timeout=20, proxy_type=None, proxy=None):
+def papers_download(driver, paper_info, dst_dir, concurrency=50, timeout=20, proxy_type=None, proxy=None):
     """
     Download image according to given urls and automatically rename them in order.
     :param timeout:
     :param proxy:
     :param proxy_type:
-    :param image_urls: list of image urls
-    :param dst_dir: output the downloaded images to dst_dir
-    :param file_prefix: files will be in format "[prefix]_xxx.jpg"
+    :param paper_info: paper information
+    :param dst_dir: output the downloaded papers to dst_dir
     :param concurrency: number of requests process simultaneously
     :return: none
     """
@@ -68,8 +67,14 @@ def papers_download(paper_info, dst_dir, concurrency=50, timeout=20, proxy_type=
         if not os.path.exists(dst_dir):
             os.makedirs(dst_dir)
         for paper in paper_info:
-            file_name = file_prefix + "_" + "%04d" % count
-            future_list.append(executor.submit(
-                paper_download, paper[2], dst_dir, "{}-{}".format(paper[0], paper[1]), timeout, proxy_type, proxy))
-            count += 1
+            try:
+                driver.get(paper[2])
+                iframe = driver.find_element_by_xpath("/html/body/iframe[2]")
+                driver.switch_to_frame(iframe)
+                src = iframe.get_attribute("src")
+                future_list.append(executor.submit(
+                    paper_download, src, dst_dir, "{}--{}".format(paper[0], paper[1]), timeout, proxy_type, proxy))
+                count += 1
+            except Exception as e:
+                print("## Err:  {}".format(e.args))
         concurrent.futures.wait(future_list, timeout=180)
